@@ -55,3 +55,16 @@ export const DELETE_ISSUE = gql`
     }
   }
 `;
+
+
+export const UPDATE_ISSUE_STATUS = gql`
+  mutation UpdateIssueStatus($id: ID!, $status: String!) {
+    updateIssueStatus(id: $id, status: $status) {
+      ok
+      issue {
+        id
+        status
+      }
+    }
+  }
+`;

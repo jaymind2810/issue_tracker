@@ -28,3 +28,4 @@ class BoardInvitation(models.Model):
     invited_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sent_invites")
     invited_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="received_invites")
     created_at = models.DateTimeField(auto_now_add=True)
+

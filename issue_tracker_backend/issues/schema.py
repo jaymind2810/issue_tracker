@@ -167,6 +167,30 @@ class DeleteIssue(graphene.Mutation):
 
         issue.delete()
         return DeleteIssue(ok=True, message="Issue deleted", deleted_id=id)
+    
+
+class UpdateIssueStatus(graphene.Mutation):
+    class Arguments:
+        id = graphene.ID(required=True)
+        status = graphene.String(required=True)
+
+    ok = graphene.Boolean()
+    issue = graphene.Field(IssueType)
+
+    @login_required
+    def mutate(self, info, id, status):
+        try:
+            issue = Issue.objects.get(id=id)
+        except Issue.DoesNotExist:
+            raise GraphQLError("Issue not found")
+
+        if status not in ["TODO", "IN_PROGRESS", "DONE"]:
+            raise GraphQLError("Invalid status")
+
+        issue.status = status
+        issue.save()
+        return UpdateIssueStatus(ok=True, issue=issue)
+
 
 
 class InviteTeamMember(graphene.Mutation):
@@ -189,6 +213,8 @@ class Mutation(graphene.ObjectType):
     create_issue = CreateIssue.Field()
     update_issue = UpdateIssue.Field()
     delete_issue = DeleteIssue.Field()
+    update_issue_status = UpdateIssueStatus.Field()
+    
     invite_team_member = InviteTeamMember.Field()
 
     # JWT Auth
