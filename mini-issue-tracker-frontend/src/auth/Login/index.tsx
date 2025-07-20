@@ -14,8 +14,8 @@ const Login = () => {
     e.preventDefault();
     try {
       const res = await loginMutation({ variables: formData });
-      const token = res.data.tokenAuth.token;
-      login(token);
+      const { token, user } = res.data.tokenAuth;
+      login(token, user);
       navigate("/dashboard");
     } catch (err) {
       console.error("Login error", err);

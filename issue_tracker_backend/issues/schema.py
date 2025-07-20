@@ -3,8 +3,10 @@ from graphene_django import DjangoObjectType
 from .models import Issue
 from django.contrib.auth import get_user_model
 from graphql_jwt.decorators import login_required
+from graphql_jwt.shortcuts import get_token, create_refresh_token
 from graphql import GraphQLError
 from .utils import enhance_description
+from django.contrib.auth import authenticate
 import graphql_jwt
 # from graphql_auth import mutations
 from graphql import GraphQLError
@@ -12,11 +14,35 @@ from django.contrib.auth.models import User
 
 User = get_user_model()
 
+
+
 class UserType(DjangoObjectType):
     class Meta:
         model = User
         fields = ("id", "username", "email")
 
+class CustomTokenAuth(graphene.Mutation):
+    class Arguments:
+        username = graphene.String(required=True)
+        password = graphene.String(required=True)
+
+    token = graphene.String()
+    refresh_token = graphene.String()
+    user = graphene.Field(UserType)
+
+    def mutate(self, info, username, password):
+        user = authenticate(username=username, password=password)
+        if user is None:
+            raise GraphQLError("Invalid credentials")
+
+        token = get_token(user)
+        refresh_token_obj = create_refresh_token(user)
+
+        return CustomTokenAuth(
+            token=token,
+            refresh_token=str(refresh_token_obj.token),
+            user=user,
+        )
 
 class RegisterUser(graphene.Mutation):
     user = graphene.Field(UserType)
@@ -184,12 +210,16 @@ class UpdateIssueStatus(graphene.Mutation):
         except Issue.DoesNotExist:
             raise GraphQLError("Issue not found")
 
-        if status not in ["TODO", "IN_PROGRESS", "DONE"]:
+        if issue.created_by != info.context.user:
+            raise GraphQLError("Permission denied")
+
+        if status not in ["OPEN", "IN_PROGRESS", "CLOSED"]:
             raise GraphQLError("Invalid status")
 
         issue.status = status
         issue.save()
         return UpdateIssueStatus(ok=True, issue=issue)
+
 
 
 
@@ -218,8 +248,9 @@ class Mutation(graphene.ObjectType):
     invite_team_member = InviteTeamMember.Field()
 
     # JWT Auth
-    token_auth = graphql_jwt.ObtainJSONWebToken.Field()
-    verify_token = graphql_jwt.Verify.Field()
+    # token_auth = graphql_jwt.ObtainJSONWebToken.Field()
+    token_auth = CustomTokenAuth.Field()
     refresh_token = graphql_jwt.Refresh.Field()
+    verify_token = graphql_jwt.Verify.Field()
     register_user = RegisterUser.Field()
     create_user = CreateUser.Field()

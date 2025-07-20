@@ -3,6 +3,7 @@ import { useDraggable } from "@dnd-kit/core";
 // import { Issue } from "../../types";
 import { GripVertical, Edit, Trash2 } from "lucide-react";
 import { Issue } from "../../../types";
+import { useAuth } from "../../../context/AuthContext";
 
 type IssueCardNewProps = {
   issue: Issue;
@@ -23,6 +24,9 @@ const IssueCardNew: React.FC<IssueCardNewProps> = ({
   onDelete,
   draggable = false,
 }) => {
+
+    const { user: currentUser } = useAuth();
+
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: issue.id,
     data: { issue },
@@ -58,6 +62,7 @@ const IssueCardNew: React.FC<IssueCardNewProps> = ({
         >
           {issue.status.replace("_", " ")}
         </span>
+        {issue.createdBy.id === currentUser.id && (
         <div className="flex gap-2">
           <button
             onClick={() => onEdit(issue)}
@@ -72,6 +77,7 @@ const IssueCardNew: React.FC<IssueCardNewProps> = ({
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
+        )}
       </div>
     </div>
   );

@@ -2,6 +2,9 @@
 
 import React from "react";
 import { Issue } from "../../types";
+import { useAuth } from "../../context/AuthContext";
+import { GripVertical, Edit, Trash2 } from "lucide-react";
+
 
 const statusColors = {
   OPEN: "bg-green-100 text-green-800",
@@ -14,6 +17,9 @@ const IssueCard: React.FC<{
   onEdit: (issue: Issue) => void;
   onDelete: (id: string) => void;
 }> = ({ issue, onEdit, onDelete }) => {
+
+  const { user: currentUser } = useAuth();
+
   return (
     <div className="bg-white shadow rounded-lg p-4 relative">
       <div className="flex justify-between items-start">
@@ -29,20 +35,25 @@ const IssueCard: React.FC<{
         Assigned to: {issue.assignedTo?.username || "N/A"}
       </div>
 
-      <div className="absolute top-2 right-2 flex space-x-2">
-        <button
-          onClick={() => onEdit(issue)}
-          className="text-sm text-blue-500 hover:underline"
-        >
-          Edit
-        </button>
-        <button
-          onClick={() => onDelete(issue.id.toString())}
-          className="text-sm text-red-500 hover:underline"
-        >
-          Delete
-        </button>
-      </div>
+      {issue.createdBy.id === currentUser.id && (
+        <>
+          <div className="gap-2 mt-2">
+            <button
+              onClick={() => onEdit(issue)}
+              className="text-blue-600 hover:text-blue-800 mx-2"
+            >
+              <Edit className="w-6 h-6" />
+            </button>
+            <button
+              onClick={() => onDelete((issue.id).toString())}
+              className="text-red-600 hover:text-red-800 mx-2"
+            >
+              <Trash2 className="w-6 h-6" />
+            </button>
+          </div>
+        </>
+      )}
+      
     </div>
   );
 };

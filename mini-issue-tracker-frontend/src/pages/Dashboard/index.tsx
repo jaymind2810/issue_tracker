@@ -9,8 +9,10 @@ import IssueCard from "../../components/IssueCard";
 import KanbanBoard from "../../components/KanbanBoard";
 import { Issue } from "../../types";
 import { errorToast, successToast } from "../../store/toast/actions-creation";
+import { useAuth } from "../../context/AuthContext";
 
 const Dashboard = () => {
+
   const { data, loading, error, refetch } = useQuery(GET_ISSUES);
   const [deleteIssue] = useMutation(DELETE_ISSUE, {
     refetchQueries: [{ query: GET_ISSUES }],

@@ -22,8 +22,13 @@ const CreateIssueModal: React.FC<{
       }
     }, [initialData]);
   
-    const [createIssue] = useMutation(CREATE_ISSUE);
-    const [updateIssue] = useMutation(UPDATE_ISSUE);
+    const [createIssue] = useMutation(CREATE_ISSUE, {
+      refetchQueries: ["GetAllIssues"], // replace with your actual query name
+    });
+
+    const [updateIssue] = useMutation(UPDATE_ISSUE, {
+      refetchQueries: ["GetAllIssues"], // same here
+    });
   
     const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();

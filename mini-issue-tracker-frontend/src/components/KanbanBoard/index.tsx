@@ -13,6 +13,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import KanbanColumn from "./KanbanColumn";
+import { useAuth } from "../../context/AuthContext";
 
 const STATUSES: ("OPEN" | "IN_PROGRESS" | "CLOSED")[] = [
   "OPEN",
@@ -27,6 +28,9 @@ interface KanbanBoardProps {
 }
 
 const KanbanBoard: React.FC<KanbanBoardProps> = ({ issues: propIssues, onEdit, onDelete }) => {
+
+  const { user: currentUser } = useAuth();
+
   const [localIssues, setLocalIssues] = useState<Issue[]>([]);
 
   useEffect(() => {
@@ -39,25 +43,17 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ issues: propIssues, onEdit, o
 
   const handleDragEnd = async (event: any) => {
 
-    console.log(event, "-------------event---------------")
 
     const { active, over } = event;
     if (!active || !over || active.id === over.id) return;
 
     const draggedIssue = localIssues.find((i) => i.id === active.id);
-    console.log(draggedIssue, "=======draggedIssue======")
-    console.log(over, "=======over======")
     
     const newStatus = over?.id;
 
-    // if (!newStatus || newStatus === draggedIssue.status) return;
-
-    console.log(newStatus, "=======draggedIssue======")
+    if (draggedIssue?.createdBy?.id !== currentUser?.id) return
 
     if (!draggedIssue || !newStatus || draggedIssue.status === newStatus) return;
-
-    // Optimistically update local state
-    console.log("========UPDATE_ISSUE_STATUS==========")
 
     setLocalIssues((prev) =>
       prev.map((issue) =>
