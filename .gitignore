@@ -1,0 +1,30 @@
+# Node.js / React specific
+node_modules/
+build/
+.env.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Python / Django specific
+__pycache__/
+*.pyc
+.env
+venv/
+env/
+db.sqlite3
+media/
+static_collected/ # If you're collecting static files to a specific directory
+logs/
+*.log
+
+# IDE and Editor specific files
+.vscode/ # Visual Studio Code
+.idea/ # IntelliJ IDEA / PyCharm
+.DS_Store # macOS specific
+*.sublime-project
+*.sublime-workspace
+
+# Operating System specific
+Thumbs.db # Windows
