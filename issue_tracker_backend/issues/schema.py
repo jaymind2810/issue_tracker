@@ -9,11 +9,15 @@ from .utils import enhance_description
 from django.contrib.auth import authenticate
 import graphql_jwt
 # from graphql_auth import mutations
+import google.generativeai as genai
 from graphql import GraphQLError
 from django.contrib.auth.models import User
+import os
 
 User = get_user_model()
 
+# genai.configure(api_key=settings.GEMINI_API_KEY)
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 
 class UserType(DjangoObjectType):
@@ -222,6 +226,29 @@ class UpdateIssueStatus(graphene.Mutation):
 
 
 
+class EnhanceDescription(graphene.Mutation):
+    class Arguments:
+        description = graphene.String(required=True)
+
+    new_description = graphene.String()
+
+    def mutate(self, info, description):
+        from langchain_google_genai import ChatGoogleGenerativeAI
+        from langchain_core.prompts import ChatPromptTemplate
+        from langchain_core.output_parsers import StrOutputParser
+
+        llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.7)
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", "You are a helpful assistant that transforms rough or casually written descriptions into clear, professional, and well-structured content. When a user submits a vague, unpolished, or incomplete description, you analyze the intent, clarify ambiguous parts, and rewrite it in a concise, formal, and polished manner, suitable for professional or business use. Ensure the final output maintains the user's original meaning while enhancing clarity, tone, and structure."),
+            ("human", "{description}")
+        ])
+        chain = prompt | llm | StrOutputParser()
+
+        # Run the chain
+        improved = chain.invoke({"description": description})
+
+        return EnhanceDescription(new_description=improved.strip())
+
 
 class InviteTeamMember(graphene.Mutation):
     ok = graphene.Boolean()
@@ -244,6 +271,8 @@ class Mutation(graphene.ObjectType):
     update_issue = UpdateIssue.Field()
     delete_issue = DeleteIssue.Field()
     update_issue_status = UpdateIssueStatus.Field()
+
+    enhance_description = EnhanceDescription.Field()
     
     invite_team_member = InviteTeamMember.Field()
 

@@ -1,7 +1,7 @@
 import React from "react";
 import { Issue } from "../../types";
 import { useMutation } from "@apollo/client";
-import { CREATE_ISSUE, UPDATE_ISSUE } from "../../graphql/mutations";
+import { CREATE_ISSUE, ENHANCE_DESCRIPTION, UPDATE_ISSUE } from "../../graphql/mutations";
 
 const CreateIssueModal: React.FC<{
     isOpen: boolean;
@@ -12,6 +12,8 @@ const CreateIssueModal: React.FC<{
     const [description, setDescription] = React.useState(initialData?.description || "");
     const [status, setStatus] = React.useState<any>(initialData?.status || "OPEN");
     const [priority, setPriority] = React.useState(initialData?.priority || "LOW");
+    const [enhanceDescription] = useMutation(ENHANCE_DESCRIPTION);
+    const [loadingAI, setLoadingAI] = React.useState(false);
   
     React.useEffect(() => {
       if (initialData) {
@@ -60,6 +62,19 @@ const CreateIssueModal: React.FC<{
   
       onClose();
     };
+
+    const handleEnhance = async () => {
+      setLoadingAI(true);
+      try {
+        const { data } = await enhanceDescription({ variables: { description } });
+        if (data?.enhanceDescription?.newDescription) {
+          setDescription(data.enhanceDescription.newDescription);
+        }
+      } catch (error) {
+        console.error("AI enhancement failed:", error);
+      }
+      setLoadingAI(false);
+    };
   
     if (!isOpen) return null;
   
@@ -81,9 +96,20 @@ const CreateIssueModal: React.FC<{
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Description"
+            rows={10}
             className="w-full border px-3 py-2 rounded"
             required
           />
+
+          <button
+            type="button"
+            onClick={handleEnhance}
+            className="bg-green-600 text-white px-4 py-2 rounded"
+            disabled={loadingAI}
+          >
+            {loadingAI ? "Enhancing..." : "Enhance with AI"}
+          </button>
+
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
@@ -104,6 +130,9 @@ const CreateIssueModal: React.FC<{
           </select>
           <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">
             {initialData ? "Update Issue" : "Create Issue"}
+          </button>
+          <button onClick={() => onClose()} className="bg-red-600 text-white px-4 py-2 mx-2 rounded">
+            Cancel
           </button>
         </form>
       </div>

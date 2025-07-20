@@ -53,8 +53,7 @@ const IssueCardNew: React.FC<IssueCardNewProps> = ({
         <h3 className="font-bold text-lg text-gray-800">{issue.title}</h3>
         {draggable && <GripVertical className="w-4 h-4 text-gray-400" />}
       </div>
-
-      <p className="text-gray-600 text-sm">{issue.description}</p>
+      <div className="overflow-y-hidden h-[250px]" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{issue.description}</div>
 
       <div className="flex justify-between items-center mt-2">
         <span
@@ -68,13 +67,13 @@ const IssueCardNew: React.FC<IssueCardNewProps> = ({
             onClick={() => onEdit(issue)}
             className="text-blue-600 hover:text-blue-800"
           >
-            <Edit className="w-4 h-4" />
+            <Edit className="w-5 h-5" />
           </button>
           <button
             onClick={() => onDelete((issue.id).toString())}
             className="text-red-600 hover:text-red-800"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-5 h-5" />
           </button>
         </div>
         )}

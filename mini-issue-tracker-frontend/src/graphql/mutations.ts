@@ -68,3 +68,11 @@ export const UPDATE_ISSUE_STATUS = gql`
     }
   }
 `;
+
+export const ENHANCE_DESCRIPTION = gql`
+  mutation EnhanceDescription($description: String!) {
+    enhanceDescription(description: $description) {
+      newDescription
+    }
+  }
+`;

@@ -10,8 +10,13 @@ import KanbanBoard from "../../components/KanbanBoard";
 import { Issue } from "../../types";
 import { errorToast, successToast } from "../../store/toast/actions-creation";
 import { useAuth } from "../../context/AuthContext";
+import { GripVertical, Edit, Trash2, User2 } from "lucide-react";
 
 const Dashboard = () => {
+
+  const { user: currentUser, logout } = useAuth();
+
+  console.log(currentUser, "---------currentUser---------")
 
   const { data, loading, error, refetch } = useQuery(GET_ISSUES);
   const [deleteIssue] = useMutation(DELETE_ISSUE, {
@@ -55,12 +60,21 @@ const Dashboard = () => {
       <div className="min-h-screen flex">
         {/* Sidebar */}
         <aside className="w-64 bg-blue-700 text-white p-6">
+          <h2 className="text-2xl font-bold mb-6 flex items-center border-b-2 pb-6">
+            <User2 className="w-7 h-7 rounded-lg p-1 mr-2 bg-blue-500" />
+            {currentUser?.username}
+          </h2>
           <h2 className="text-xl font-bold mb-6">Issue Tracker</h2>
           <nav>
             <ul className="space-y-4">
               <li className="hover:text-blue-200 cursor-pointer">Dashboard</li>
               <li className="hover:text-blue-200 cursor-pointer">Team</li>
-              <li className="hover:text-blue-200 cursor-pointer">Settings</li>
+              <li 
+                className="hover:text-red-200 text-red-500 font-semibold cursor-pointer"
+                onClick={() => logout()}
+                >
+                  Log out
+              </li>
             </ul>
           </nav>
         </aside>
@@ -105,6 +119,10 @@ const Dashboard = () => {
                 </button>
               ))}
             </div>
+          )}
+
+          {filteredIssues?.length === 0 && (
+            <div className="font-semibold text-xl justify-center text-indigo-800 text-center">No data found.</div>
           )}
 
           {/* View Toggle */}
