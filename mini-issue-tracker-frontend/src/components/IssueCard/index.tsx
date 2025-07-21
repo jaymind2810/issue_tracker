@@ -16,8 +16,9 @@ const IssueCard: React.FC<{
   issue: Issue;
   onEdit: (issue: Issue) => void;
   onDelete: (id: string) => void;
-  onClick?: any
-}> = ({ issue, onEdit, onDelete, onClick }) => {
+  onClick?: any;
+   onAssign?: (issue: Issue) => void;
+}> = ({ issue, onEdit, onDelete, onClick, onAssign }) => {
 
   const { user: currentUser } = useAuth();
 
@@ -48,7 +49,18 @@ const IssueCard: React.FC<{
         </span>
         {issue.createdBy.id === currentUser.id && (
           <>
-            <div className="gap-2">
+            <div className="gap-2 items-center content-center justify-center">
+              {onAssign && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAssign(issue);
+                  }}
+                  className="bg-red-600 text-white mx-1 px-1 text-sm rounded hover:bg-red-700"
+                >
+                  Assign
+                </button>
+              )}
               <button
                 onClick={() => onEdit(issue)}
                 className="text-blue-600 hover:text-blue-800 mx-1"

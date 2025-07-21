@@ -93,6 +93,7 @@ class Query(graphene.ObjectType):
     all_issues = graphene.List(IssueType, status=IssueStatusEnum())
     my_issues = graphene.List(IssueType)
     issue_status_enum = graphene.List(IssueStatusEnum)
+    users = graphene.List(UserType)
 
     @login_required
     def resolve_all_issues(self, info, status=None):
@@ -108,6 +109,9 @@ class Query(graphene.ObjectType):
 
     def resolve_issue_status_enum(self, info):
         return list(IssueStatusEnum)
+    
+    def resolve_users(self, info):
+        return get_user_model().objects.all()
 
 
 class IssueInput(graphene.InputObjectType):
@@ -229,6 +233,23 @@ class UpdateIssueStatus(graphene.Mutation):
         IssueSubscription.broadcast_issue(issue)
         return UpdateIssueStatus(ok=True, issue=issue)
 
+class AssignIssue(graphene.Mutation):
+    class Arguments:
+        issue_id = graphene.ID(required=True)
+        user_id = graphene.ID(required=True)
+
+    ok = graphene.Boolean()
+    issue = graphene.Field(IssueType)
+
+    @login_required
+    def mutate(self, info, issue_id, user_id):
+        user = get_user_model().objects.get(pk=user_id)
+        issue = Issue.objects.get(pk=issue_id)
+        issue.assigned_to = user
+        issue.save()
+        return AssignIssue(ok=True, issue=issue)
+
+
 
 
 class EnhanceDescription(graphene.Mutation):
@@ -301,6 +322,7 @@ class Mutation(graphene.ObjectType):
     update_issue = UpdateIssue.Field()
     delete_issue = DeleteIssue.Field()
     update_issue_status = UpdateIssueStatus.Field()
+    assign_issue = AssignIssue.Field()
 
     enhance_description = EnhanceDescription.Field()
     

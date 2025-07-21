@@ -11,6 +11,6 @@ export interface User {
     status: "OPEN" | "IN_PROGRESS" | "CLOSED";
     priority: string;
     createdBy: User;
-    assignedTo: User | null;
+    assignedTo?: User | null;
   }
   

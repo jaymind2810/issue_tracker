@@ -85,3 +85,18 @@ export const INVITE_TEAM_MEMBER = gql`
     }
   }
 `;
+
+export const ASSIGN_ISSUE = gql`
+  mutation AssignIssue($issueId: ID!, $userId: ID!) {
+    assignIssue(issueId: $issueId, userId: $userId) {
+      ok
+      issue {
+        id
+        assignedTo {
+          id
+          username
+        }
+      }
+    }
+  }
+`;

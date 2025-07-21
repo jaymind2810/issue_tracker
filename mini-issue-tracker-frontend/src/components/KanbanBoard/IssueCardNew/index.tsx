@@ -60,6 +60,11 @@ const IssueCardNew: React.FC<IssueCardNewProps> = ({
         >
           {issue.status.replace("_", " ")}
         </span>
+        <span
+          className={`text-sm text-gray-500`}
+        >
+          Assigned to: {issue.assignedTo?.username || "N/A"}
+        </span>
         {issue.createdBy.id === currentUser.id && (
         <div className="flex gap-2">
           <button

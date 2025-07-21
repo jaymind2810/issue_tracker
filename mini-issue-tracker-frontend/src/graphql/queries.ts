@@ -18,3 +18,12 @@ export const GET_ISSUES = gql`
     }
   }
 `;
+
+export const GET_USERS = gql`
+  query GetUsers {
+    users {
+      id
+      username
+    }
+  }
+`;

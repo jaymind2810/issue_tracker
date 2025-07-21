@@ -15,6 +15,7 @@ import RealTimeIssueListener from "../../components/WebSocket";
 import InviteTeamModal from "../../components/InviteTeamModal";
 import { useDispatch } from "react-redux";
 import ViewIssueModal from "../../components/ViewIssueModal";
+import AssignUserModal from "../../components/AssignUserModal";
 
 const Dashboard = () => {
 
@@ -35,7 +36,7 @@ const Dashboard = () => {
     }
   }, [data]);
 
-  const [filter, setFilter] = React.useState<"ALL" | "OPEN" | "IN_PROGRESS" | "CLOSED">("ALL");
+  const [filter, setFilter] = React.useState<"ALL" | "OPEN" | "IN_PROGRESS" | "CLOSED" | "ASSIGNED_TO_ME">("ALL");
   const [showCreateModal, setShowCreateModal] = React.useState(false);
   const [editingIssue, setEditingIssue] = React.useState<Issue | null>(null);
   const [showKanban, setShowKanban] = React.useState(false); // 🔁 Toggle for Kanban
@@ -44,10 +45,20 @@ const Dashboard = () => {
   const [viewingIssue, setViewingIssue] = React.useState<Issue | null>(null);
   const [showViewModal, setShowViewModal] = React.useState(false);
 
+  const [assignModalOpen, setAssignModalOpen] = React.useState(false);
+  const [assigningIssue, setAssigningIssue] = React.useState<Issue | null>(null);
+
   const filteredIssues = React.useMemo(() => {
     if (filter === "ALL") return data?.allIssues || [];
+
+    if (filter === "ASSIGNED_TO_ME") {
+      return (data?.allIssues || []).filter(
+        (issue:Issue) => issue?.assignedTo?.id === currentUser?.id
+      );
+    }
+
     return issues.filter((issue) => issue.status === filter);
-  }, [data, filter]);
+  }, [data, filter, currentUser]);
 
   const handleDelete = async (id: string) => {
     try {
@@ -127,7 +138,7 @@ const Dashboard = () => {
           {/* Filters */}
           {!showKanban && (
             <div className="flex space-x-4 mb-6">
-              {["ALL", "OPEN", "IN_PROGRESS", "CLOSED"].map((status) => (
+              {["ALL", "OPEN", "IN_PROGRESS", "CLOSED", "ASSIGNED_TO_ME"].map((status) => (
                 <button
                   key={status}
                   onClick={() => setFilter(status as any)}
@@ -152,7 +163,6 @@ const Dashboard = () => {
             <KanbanBoard
               issues={data?.allIssues || []}
               onEdit={(i) => {
-                console.log(i, "0--------Edit Button Clicked000000000")
                 setEditingIssue(i);
                 setShowCreateModal(true);
               }}
@@ -172,6 +182,10 @@ const Dashboard = () => {
                   onClick={() => {
                     setViewingIssue(issue);
                     setShowViewModal(true);
+                  }}
+                  onAssign={(i) => {
+                    setAssigningIssue(i);
+                    setAssignModalOpen(true);
                   }}
                 />
               ))}
@@ -207,6 +221,12 @@ const Dashboard = () => {
             return newIssues
           });
         }}
+      />
+
+      <AssignUserModal
+        isOpen={assignModalOpen}
+        onClose={() => setAssignModalOpen(false)}
+        issue={assigningIssue}
       />
 
       <InviteTeamModal
