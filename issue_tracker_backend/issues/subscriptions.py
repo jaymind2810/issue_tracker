@@ -1,49 +1,41 @@
-# issues/subscriptions.py
-
 import graphene
-from graphene_django import DjangoObjectType
-from .models import Issue
 import channels_graphql_ws
+from .types import IssueType
+from channels_graphql_ws import GraphqlWsConsumer
 
-
-class NewIssueType(DjangoObjectType):
-    class Meta:
-        model = Issue
-        fields = "__all__"
+from .models import Issue
+from asgiref.sync import sync_to_async
 
 
 class IssueSubscription(channels_graphql_ws.Subscription):
-    """Subscription for issue updates."""
-    issue = graphene.Field(NewIssueType)
+    """GraphQL subscription for real-time issue updates."""
+
+    issue = graphene.Field(IssueType)
 
     class Arguments:
-        id = graphene.ID(required=False)
+        pass
 
-    def subscribe(self, info, id=None):
-        # Subscribe to group(s) based on presence of `id`
-        return [f"issue_updates:{id}" if id else "issue_updates"]
+    def subscribe(self, info):
+        return ["issue_updates"]
 
-    def publish(self, info, id=None):
-        return IssueSubscription(issue=self["issue"])
+    async def publish(self, info):
+        issue_id = self["id"]  # ✅ self is the payload dict
+        issue = await sync_to_async(
+            lambda: Issue.objects.select_related("created_by", "assigned_to").get(id=issue_id)
+        )()
+        return IssueSubscription(issue=issue)
 
     @classmethod
     def broadcast_issue(cls, issue):
         cls.broadcast(
             group="issue_updates",
-            payload={"issue": issue},
-        )
-        cls.broadcast(
-            group=f"issue_updates:{issue.id}",
-            payload={"issue": issue},
+            payload={"id": issue.id}  # ✅ Keep payload small and simple
         )
 
 
-class IssueSubscriptionConsumer(channels_graphql_ws.GraphqlWsConsumer):
-    """WebSocket consumer for handling GraphQL subscriptions."""
+class MyGraphqlWsConsumer(GraphqlWsConsumer):
+    from issues.schema import schema 
+    schema = schema
 
     async def on_connect(self, payload):
-        # Optional: authentication logic here
-        pass
-
-    # Schema will be assigned in schema.py
-    schema = None
+        print("🔌 WebSocket connected!")

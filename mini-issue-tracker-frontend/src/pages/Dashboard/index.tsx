@@ -1,7 +1,7 @@
 // src/pages/Dashboard/index.tsx
 
-import React from "react";
-import { useQuery, useMutation } from "@apollo/client";
+import React, { useEffect } from "react";
+import { useQuery, useMutation, useSubscription } from "@apollo/client";
 import { GET_ISSUES } from "../../graphql/queries";
 import { DELETE_ISSUE } from "../../graphql/mutations";
 import CreateIssueModal from "../../components/CreateIssueModal";
@@ -16,6 +16,7 @@ import InviteTeamModal from "../../components/InviteTeamModal";
 import { useDispatch } from "react-redux";
 import ViewIssueModal from "../../components/ViewIssueModal";
 import AssignUserModal from "../../components/AssignUserModal";
+import { ISSUE_SUBSCRIPTION } from "../../graphql/subscriptions";
 
 const Dashboard = () => {
 
@@ -24,12 +25,34 @@ const Dashboard = () => {
   const dispatch = useDispatch()
 
   const { data, loading, error, refetch } = useQuery(GET_ISSUES);
+  const { data:socketData, loading:socketLoading } = useSubscription(ISSUE_SUBSCRIPTION);
   const [deleteIssue] = useMutation(DELETE_ISSUE, {
     refetchQueries: [{ query: GET_ISSUES }],
   });
 
   const [issues, setIssues] = React.useState<Issue[]>([]);
 
+
+  useEffect(() => {
+    if (socketData?.issueSubscription?.issue) {
+      console.log(socketData, "==========socket data---------")
+      const updatedIssue = socketData.issueSubscription.issue;
+  
+      setIssues((prevIssues: Issue[]) => {
+        const existing = prevIssues.find((i) => i.id === updatedIssue.id);
+  
+        // If issue already exists, update it
+        if (existing) {
+          return prevIssues.map((i) =>
+            i.id === updatedIssue.id ? updatedIssue : i
+          );
+        }
+  
+        // Else, add the new issue to the top
+        return [updatedIssue, ...prevIssues];
+      });
+    }
+  }, [socketData]);
   React.useEffect(() => {
     if (data?.allIssues) {
       setIssues(data.allIssues);
@@ -49,16 +72,22 @@ const Dashboard = () => {
   const [assigningIssue, setAssigningIssue] = React.useState<Issue | null>(null);
 
   const filteredIssues = React.useMemo(() => {
-    if (filter === "ALL") return data?.allIssues || [];
-
+    const source = issues;
+  
+    if (filter === "ALL") return source;
+  
     if (filter === "ASSIGNED_TO_ME") {
-      return (data?.allIssues || []).filter(
-        (issue:Issue) => issue?.assignedTo?.id === currentUser?.id
-      );
+      return source.filter((issue) => issue?.assignedTo?.id === currentUser?.id);
     }
+  
+    return source.filter((issue) => issue.status === filter);
+  }, [issues, filter, currentUser]);
 
-    return issues.filter((issue) => issue.status === filter);
-  }, [data, filter, currentUser]);
+  React.useEffect(() => {
+    if (data?.allIssues && issues.length === 0) {
+      setIssues(data.allIssues);
+    }
+  }, [data]);
 
   const handleDelete = async (id: string) => {
     try {
@@ -209,7 +238,7 @@ const Dashboard = () => {
         issue={viewingIssue}
       />
 
-      <RealTimeIssueListener
+      {/* <RealTimeIssueListener
         onNewData={(updatedIssue: Issue) => {
           setIssues((prevIssues: Issue[]) => {
             const existing = prevIssues.find((i) => i.id === updatedIssue.id);
@@ -221,7 +250,7 @@ const Dashboard = () => {
             return newIssues
           });
         }}
-      />
+      /> */}
 
       <AssignUserModal
         isOpen={assignModalOpen}

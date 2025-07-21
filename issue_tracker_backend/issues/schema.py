@@ -1,6 +1,7 @@
 from django.urls import re_path
 import graphene
 from graphene_django import DjangoObjectType
+from .types import IssueType
 from .models import Issue
 from django.contrib.auth import get_user_model
 from graphql_jwt.decorators import login_required
@@ -13,8 +14,10 @@ import graphql_jwt
 import google.generativeai as genai
 from graphql import GraphQLError
 from django.contrib.auth.models import User
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 import os
-from .subscriptions import IssueSubscription, IssueSubscriptionConsumer
+from .subscriptions import IssueSubscription
 
 
 User = get_user_model()
@@ -84,10 +87,6 @@ class IssueStatusEnum(graphene.Enum):
     IN_PROGRESS = "IN_PROGRESS"
     CLOSED = "CLOSED"
 
-class IssueType(DjangoObjectType):
-    class Meta:
-        model = Issue
-        fields = "__all__"
 
 class Query(graphene.ObjectType):
     all_issues = graphene.List(IssueType, status=IssueStatusEnum())
@@ -142,6 +141,7 @@ class CreateIssue(graphene.Mutation):
             created_by=user,
         )
         IssueSubscription.broadcast_issue(issue)
+
         return CreateIssue(issue=issue)
 
 
@@ -181,6 +181,7 @@ class UpdateIssue(graphene.Mutation):
 
         issue.save()
         IssueSubscription.broadcast_issue(issue)
+
         return UpdateIssue(issue=issue)
 
 
@@ -204,6 +205,8 @@ class DeleteIssue(graphene.Mutation):
             raise GraphQLError("Permission denied.")
 
         issue.delete()
+        IssueSubscription.broadcast_issue(issue)
+
         return DeleteIssue(ok=True, message="Issue deleted", deleted_id=id)
     
 
@@ -231,6 +234,7 @@ class UpdateIssueStatus(graphene.Mutation):
         issue.status = status
         issue.save()
         IssueSubscription.broadcast_issue(issue)
+
         return UpdateIssueStatus(ok=True, issue=issue)
 
 class AssignIssue(graphene.Mutation):
@@ -247,6 +251,8 @@ class AssignIssue(graphene.Mutation):
         issue = Issue.objects.get(pk=issue_id)
         issue.assigned_to = user
         issue.save()
+        IssueSubscription.broadcast_issue(issue)
+
         return AssignIssue(ok=True, issue=issue)
 
 
@@ -337,9 +343,9 @@ class Mutation(graphene.ObjectType):
     create_user = CreateUser.Field()
 
 class Subscription(graphene.ObjectType):
-    issue_updated = IssueSubscription.Field()
+    issue_subscription = IssueSubscription.Field()
 
 
 schema = graphene.Schema(query=Query, mutation=Mutation, subscription=Subscription)
 
-IssueSubscriptionConsumer.schema = schema
+# IssueSubscriptionConsumer.schema = schema

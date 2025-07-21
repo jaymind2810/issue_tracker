@@ -1,7 +1,6 @@
-# issues/routing.py
 from django.urls import path
-from .subscriptions import IssueSubscriptionConsumer
+from .subscriptions import MyGraphqlWsConsumer
 
 websocket_urlpatterns = [
-    path("graphql/", IssueSubscriptionConsumer.as_asgi()),
+    path("graphql/", MyGraphqlWsConsumer.as_asgi()),
 ]

@@ -1,19 +1,24 @@
 import { gql } from '@apollo/client';
 
 export const ISSUE_SUBSCRIPTION = gql`
-  subscription {
-    issueSubscribe {
-      id
-      title
-      description
-      status
-      createdBy {
+  subscription OnIssueUpdated {
+    issueSubscription {
+      issue {
         id
-        username
-      }
-      assignedTo {
-        id
-        username
+        title
+        description
+        status
+        priority
+        createdBy {
+          id
+          username
+        }
+        assignedTo {
+          id
+          username
+        }
+        createdAt
+        # remove updatedAt if not available
       }
     }
   }
