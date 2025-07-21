@@ -3,12 +3,15 @@ import { useMutation } from "@apollo/client";
 import { LOGIN_MUTATION } from "../authMutations";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { errorToast, successToast } from "../../store/toast/actions-creation";
+import { useDispatch } from "react-redux";
 
 const Login = () => {
   const [formData, setFormData] = useState({ username: "", password: "" });
   const [loginMutation, { loading, error }] = useMutation(LOGIN_MUTATION);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const dispatch = useDispatch()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,17 +19,28 @@ const Login = () => {
       const res = await loginMutation({ variables: formData });
       const { token, user } = res.data.tokenAuth;
       login(token, user);
+      dispatch(successToast({
+        toast: true,
+        message: "Login Successfully !!",
+      }));
       navigate("/dashboard");
     } catch (err) {
-      console.error("Login error", err);
+      dispatch(errorToast({
+        toast: true,
+        message: `"Login error: ", ${err}`
+      }));
     }
   };
 
   return (
+    <>
     <div className="flex items-center justify-center h-screen bg-gray-100">
+      <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-sm">
+
+      
       <form
         onSubmit={handleSubmit}
-        className="bg-white p-8 rounded-xl shadow-md w-full max-w-sm"
+        className=""
       >
         <h2 className="text-2xl font-bold mb-6">Login</h2>
         <input
@@ -56,7 +70,15 @@ const Login = () => {
           {loading ? "Logging in..." : "Login"}
         </button>
       </form>
+      <div
+        onClick={()=> {navigate("/register")} }
+        className="w-full flex bg-gray-100 py-2 rounded-lg font-semibold justify-center cursor-pointer mt-4"
+      >
+        Do you want to register ?
+      </div>
+      </div>
     </div>
+    </>
   );
 };
 

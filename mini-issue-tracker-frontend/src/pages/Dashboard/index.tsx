@@ -11,17 +11,24 @@ import { Issue } from "../../types";
 import { errorToast, successToast } from "../../store/toast/actions-creation";
 import { useAuth } from "../../context/AuthContext";
 import { GripVertical, Edit, Trash2, User2 } from "lucide-react";
+import RealTimeIssueListener from "../../components/WebSocket";
 
 const Dashboard = () => {
 
   const { user: currentUser, logout } = useAuth();
 
-  console.log(currentUser, "---------currentUser---------")
-
   const { data, loading, error, refetch } = useQuery(GET_ISSUES);
   const [deleteIssue] = useMutation(DELETE_ISSUE, {
     refetchQueries: [{ query: GET_ISSUES }],
   });
+
+  const [issues, setIssues] = React.useState<Issue[]>([]);
+
+  React.useEffect(() => {
+    if (data?.allIssues) {
+      setIssues(data.allIssues);
+    }
+  }, [data]);
 
   const [filter, setFilter] = React.useState<"ALL" | "OPEN" | "IN_PROGRESS" | "CLOSED">("ALL");
   const [showCreateModal, setShowCreateModal] = React.useState(false);
@@ -30,7 +37,7 @@ const Dashboard = () => {
 
   const filteredIssues = React.useMemo(() => {
     if (filter === "ALL") return data?.allIssues || [];
-    return (data?.allIssues || []).filter((issue: Issue) => issue.status === filter);
+    return issues.filter((issue) => issue.status === filter);
   }, [data, filter]);
 
   const handleDelete = async (id: string) => {
@@ -157,6 +164,20 @@ const Dashboard = () => {
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         initialData={editingIssue}
+      />
+
+      <RealTimeIssueListener
+        onNewData={(updatedIssue: Issue) => {
+          setIssues((prevIssues: Issue[]) => {
+            const existing = prevIssues.find((i) => i.id === updatedIssue.id);
+            const newIssues = existing
+              ? prevIssues.map((i) => (i.id === updatedIssue.id ? updatedIssue : i))
+              : [updatedIssue, ...prevIssues];
+
+            // Optional sorting if needed
+            return newIssues
+          });
+        }}
       />
     </>
   );
