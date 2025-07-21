@@ -7,6 +7,7 @@ export const GET_ISSUES = gql`
       title
       description
       status
+      priority
       assignedTo {
         id
         username

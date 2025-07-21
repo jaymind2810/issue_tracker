@@ -17,12 +17,14 @@ import { useDispatch } from "react-redux";
 import ViewIssueModal from "../../components/ViewIssueModal";
 import AssignUserModal from "../../components/AssignUserModal";
 import { ISSUE_SUBSCRIPTION } from "../../graphql/subscriptions";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
 
   const { user: currentUser, logout } = useAuth();
 
   const dispatch = useDispatch()
+  const navigate = useNavigate();
 
   const { data, loading, error, refetch } = useQuery(GET_ISSUES);
   const { data:socketData, loading:socketLoading } = useSubscription(ISSUE_SUBSCRIPTION);
@@ -31,34 +33,6 @@ const Dashboard = () => {
   });
 
   const [issues, setIssues] = React.useState<Issue[]>([]);
-
-
-  useEffect(() => {
-    if (socketData?.issueSubscription?.issue) {
-      console.log(socketData, "==========socket data---------")
-      const updatedIssue = socketData.issueSubscription.issue;
-  
-      setIssues((prevIssues: Issue[]) => {
-        const existing = prevIssues.find((i) => i.id === updatedIssue.id);
-  
-        // If issue already exists, update it
-        if (existing) {
-          return prevIssues.map((i) =>
-            i.id === updatedIssue.id ? updatedIssue : i
-          );
-        }
-  
-        // Else, add the new issue to the top
-        return [updatedIssue, ...prevIssues];
-      });
-    }
-  }, [socketData]);
-  React.useEffect(() => {
-    if (data?.allIssues) {
-      setIssues(data.allIssues);
-    }
-  }, [data]);
-
   const [filter, setFilter] = React.useState<"ALL" | "OPEN" | "IN_PROGRESS" | "CLOSED" | "ASSIGNED_TO_ME">("ALL");
   const [showCreateModal, setShowCreateModal] = React.useState(false);
   const [editingIssue, setEditingIssue] = React.useState<Issue | null>(null);
@@ -82,6 +56,32 @@ const Dashboard = () => {
   
     return source.filter((issue) => issue.status === filter);
   }, [issues, filter, currentUser]);
+
+  useEffect(() => {
+    if (socketData?.issueSubscription?.issue) {
+      const updatedIssue = socketData.issueSubscription.issue;
+  
+      setIssues((prevIssues: Issue[]) => {
+        const existing = prevIssues.find((i) => i.id === updatedIssue.id);
+  
+        // If issue already exists, update it
+        if (existing) {
+          return prevIssues.map((i) =>
+            i.id === updatedIssue.id ? updatedIssue : i
+          );
+        }
+  
+        // Else, add the new issue to the top
+        return [updatedIssue, ...prevIssues];
+      });
+    }
+  }, [socketData]);
+
+  React.useEffect(() => {
+    if (data?.allIssues) {
+      setIssues(data.allIssues);
+    }
+  }, [data]);
 
   React.useEffect(() => {
     if (data?.allIssues && issues.length === 0) {
@@ -123,8 +123,11 @@ const Dashboard = () => {
           <h2 className="text-xl font-bold mb-6">Issue Tracker</h2>
           <nav>
             <ul className="space-y-4">
-              <li className="hover:text-blue-200 cursor-pointer">Dashboard</li>
-              <li className="hover:text-blue-200 cursor-pointer">Team</li>
+              <li 
+                className="hover:text-blue-200 cursor-pointer"
+                onClick={() => navigate("/dashboard")}
+              >Dashboard</li>
+              {/* <li className="hover:text-blue-200 cursor-pointer">Team</li> */}
               <li 
                 className="hover:text-blue-200 cursor-pointer"
                 onClick={() => setShowInviteModal(true)}
@@ -183,10 +186,6 @@ const Dashboard = () => {
             </div>
           )}
 
-          {filteredIssues?.length === 0 && (
-            <div className="font-semibold text-xl justify-center text-indigo-800 text-center">No data found.</div>
-          )}
-
           {/* View Toggle */}
           {showKanban ? (
             <KanbanBoard
@@ -198,25 +197,82 @@ const Dashboard = () => {
               onDelete={handleDelete}
             />
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="bg-white shadow rounded-lg overflow-hidden">
+              <div className="grid grid-cols-6 gap-4 px-6 py-4 font-bold border-b bg-gray-100 text-gray-700">
+                <div>Title</div>
+                <div>Status</div>
+                <div>Priority</div>
+                <div>Assigned To</div>
+                <div>Created By</div>
+                <div>Actions</div>
+              </div>
+
+              {filteredIssues?.length === 0 && (
+                <div className="py-4 font-semibold text-xl justify-center text-indigo-800 text-center">No data found.</div>
+              )}
+
               {filteredIssues.map((issue: Issue) => (
-                <IssueCard
+                <div
                   key={issue.id}
-                  issue={issue}
-                  onEdit={(i) => {
-                    setEditingIssue(i);
-                    setShowCreateModal(true);
-                  }}
-                  onDelete={handleDelete}
-                  onClick={() => {
-                    setViewingIssue(issue);
-                    setShowViewModal(true);
-                  }}
-                  onAssign={(i) => {
-                    setAssigningIssue(i);
-                    setAssignModalOpen(true);
-                  }}
-                />
+                  className="grid grid-cols-6 gap-4 px-6 py-4 border-b hover:bg-gray-50 text-sm items-center"
+                >
+                  <div>{issue.title}</div>
+                  <div>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                        issue.status === "OPEN"
+                          ? "bg-green-100 text-green-800"
+                          : issue.status === "IN_PROGRESS"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : "bg-gray-200 text-gray-800"
+                      }`}
+                    >
+                      {issue.status.replace("_", " ")}
+                    </span>
+                  </div>
+                  <div>{issue.priority}</div>
+                  <div>{issue.assignedTo?.username || "Unassigned"}</div>
+                  <div>{issue?.createdBy?.username}</div>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => {
+                        setViewingIssue(issue);
+                        setShowViewModal(true);
+                      }}
+                      className="text-blue-600 hover:underline"
+                    >
+                      View
+                    </button>
+                    {(issue.createdBy.id === currentUser.id) && (
+                      <>
+                    <button
+                      onClick={() => {
+                        setEditingIssue(issue);
+                        setShowCreateModal(true);
+                      }}
+                      className="text-yellow-600 hover:underline"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => {
+                        setAssigningIssue(issue);
+                        setAssignModalOpen(true);
+                      }}
+                      className="text-purple-600 hover:underline"
+                    >
+                      Assign
+                    </button>
+                    <button
+                      onClick={() => handleDelete((issue?.id).toString())}
+                      className="text-red-600 hover:underline"
+                    >
+                      Delete
+                    </button>
+                    </>
+                    )}
+                  </div>
+                </div>
               ))}
             </div>
           )}

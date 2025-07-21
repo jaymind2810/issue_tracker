@@ -5,7 +5,7 @@ import { Issue } from "../../types";
 import { useMutation } from "@apollo/client";
 import { UPDATE_ISSUE, UPDATE_ISSUE_STATUS } from "../../graphql/mutations";
 import { GET_ISSUES } from "../../graphql/queries";
-import { errorToast, successToast } from "../../store/toast/actions-creation";
+import { errorToast, successToast, warningToast } from "../../store/toast/actions-creation";
 import { DndContext, closestCenter } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -54,7 +54,13 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ issues: propIssues, onEdit, o
     
     const newStatus = over?.id;
 
-    if (draggedIssue?.createdBy?.id !== currentUser?.id) return
+    if (draggedIssue?.createdBy?.id !== currentUser?.id) {
+      dispatch(warningToast({
+        toast: true,
+        message: "You have not allowed to move this ticket."
+      }));
+      return
+    }
 
     if (!draggedIssue || !newStatus || draggedIssue.status === newStatus) return;
 
