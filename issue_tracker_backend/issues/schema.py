@@ -1,3 +1,4 @@
+from django.urls import re_path
 import graphene
 from graphene_django import DjangoObjectType
 from .models import Issue
@@ -13,10 +14,11 @@ import google.generativeai as genai
 from graphql import GraphQLError
 from django.contrib.auth.models import User
 import os
+from .subscriptions import IssueSubscription, IssueSubscriptionConsumer
+
 
 User = get_user_model()
 
-# genai.configure(api_key=settings.GEMINI_API_KEY)
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 
@@ -135,6 +137,7 @@ class CreateIssue(graphene.Mutation):
             priority=priority or "MEDIUM",
             created_by=user,
         )
+        IssueSubscription.broadcast_issue(issue)
         return CreateIssue(issue=issue)
 
 
@@ -173,6 +176,7 @@ class UpdateIssue(graphene.Mutation):
             issue.assigned_to = User.objects.get(id=assigned_to_id)
 
         issue.save()
+        IssueSubscription.broadcast_issue(issue)
         return UpdateIssue(issue=issue)
 
 
@@ -222,6 +226,7 @@ class UpdateIssueStatus(graphene.Mutation):
 
         issue.status = status
         issue.save()
+        IssueSubscription.broadcast_issue(issue)
         return UpdateIssueStatus(ok=True, issue=issue)
 
 
@@ -283,3 +288,11 @@ class Mutation(graphene.ObjectType):
     verify_token = graphql_jwt.Verify.Field()
     register_user = RegisterUser.Field()
     create_user = CreateUser.Field()
+
+class Subscription(graphene.ObjectType):
+    issue_updated = IssueSubscription.Field()
+
+
+schema = graphene.Schema(query=Query, mutation=Mutation, subscription=Subscription)
+
+IssueSubscriptionConsumer.schema = schema
