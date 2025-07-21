@@ -112,14 +112,7 @@ class Query(graphene.ObjectType):
     def resolve_users(self, info):
         return get_user_model().objects.all()
 
-
-class IssueInput(graphene.InputObjectType):
-    title = graphene.String(required=True)
-    description = graphene.String(required=True)
-    assigned_to_id = graphene.Int()
-    priority = graphene.String()
-    tags = graphene.String()
-
+# =================== Issue Mutations =========================================
 class CreateIssue(graphene.Mutation):
     issue = graphene.Field(IssueType)
 

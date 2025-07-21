@@ -32,6 +32,16 @@ A full-stack issue tracking system with **Django + GraphQL** backend and **React
 
 ---
 
+**Video Link**
+- Issue crude and Ai Enhance Description
+
+https://www.loom.com/share/1f5d392a604b41b7b26225fa5188d808?sid=4dc9ed77-f798-48a6-855e-f6764c275f1b
+
+
+- Websocket Link
+
+https://www.loom.com/share/37050c5c55dc42d68ca6679b066eacc2?sid=938f8b6d-77ea-477e-bc1a-8f09342d8b24
+
 ## 🧑‍💻 Local Development Setup
 
 ## ⬇️ Cloning the repository
@@ -171,4 +181,5 @@ npm run dev
 * 🛨️ WebSocket support tested only on local/dev environments
 * 🐛 No activity logs/history for issue updates yet
 * 📱 UI not fully optimized for mobile yet
+
 
