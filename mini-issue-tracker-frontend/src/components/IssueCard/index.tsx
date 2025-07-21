@@ -16,13 +16,17 @@ const IssueCard: React.FC<{
   issue: Issue;
   onEdit: (issue: Issue) => void;
   onDelete: (id: string) => void;
-}> = ({ issue, onEdit, onDelete }) => {
+  onClick?: any
+}> = ({ issue, onEdit, onDelete, onClick }) => {
 
   const { user: currentUser } = useAuth();
 
   return (
     <div className="bg-white shadow rounded-lg p-4 relative max-h-[400px]">
-      <div className="flex justify-between items-start">
+      <div 
+        className="flex justify-between items-start"
+        onClick={onClick}
+      >
         <div >
           <h2 className="text-lg font-semibold text-gray-800">{issue.title}</h2>
           <div className="overflow-y-hidden h-[250px]" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{issue.description}</div>

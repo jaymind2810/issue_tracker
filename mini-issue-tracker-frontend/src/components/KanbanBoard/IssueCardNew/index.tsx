@@ -46,14 +46,13 @@ const IssueCardNew: React.FC<IssueCardNewProps> = ({
       ref={setNodeRef}
       style={style}
       {...attributes}
-      {...listeners}
       className="bg-white p-4 rounded-md shadow-md flex flex-col gap-2 border border-gray-200 relative"
     >
-      <div className="flex justify-between items-start">
+      <div {...listeners} className="flex justify-between items-start">
         <h3 className="font-bold text-lg text-gray-800">{issue.title}</h3>
         {draggable && <GripVertical className="w-4 h-4 text-gray-400" />}
       </div>
-      <div className="overflow-y-hidden h-[250px]" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{issue.description}</div>
+      <div {...listeners} className="overflow-y-hidden h-[250px]" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{issue.description}</div>
 
       <div className="flex justify-between items-center mt-2">
         <span
@@ -64,13 +63,19 @@ const IssueCardNew: React.FC<IssueCardNewProps> = ({
         {issue.createdBy.id === currentUser.id && (
         <div className="flex gap-2">
           <button
-            onClick={() => onEdit(issue)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(issue);
+            }}
             className="text-blue-600 hover:text-blue-800"
           >
             <Edit className="w-5 h-5" />
           </button>
           <button
-            onClick={() => onDelete((issue.id).toString())}
+            onClick={(e) => {
+              e.stopPropagation(); // ✅ Prevents drag handling
+              onDelete(issue.id.toString());
+            }}
             className="text-red-600 hover:text-red-800"
           >
             <Trash2 className="w-5 h-5" />

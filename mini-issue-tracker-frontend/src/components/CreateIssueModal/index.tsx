@@ -2,12 +2,18 @@ import React from "react";
 import { Issue } from "../../types";
 import { useMutation } from "@apollo/client";
 import { CREATE_ISSUE, ENHANCE_DESCRIPTION, UPDATE_ISSUE } from "../../graphql/mutations";
+import { useDispatch } from "react-redux";
+import { successToast } from "../../store/toast/actions-creation";
+import Loader from "../Loader";
 
 const CreateIssueModal: React.FC<{
     isOpen: boolean;
     onClose: () => void;
     initialData?: Issue | null;
   }> = ({ isOpen, onClose, initialData }) => {
+
+    const dispatch = useDispatch()
+
     const [title, setTitle] = React.useState(initialData?.title || "");
     const [description, setDescription] = React.useState(initialData?.description || "");
     const [status, setStatus] = React.useState<any>(initialData?.status || "OPEN");
@@ -46,6 +52,10 @@ const CreateIssueModal: React.FC<{
             priority,
           },
         });
+        dispatch(successToast({
+          toast: true,
+          message: "Issue updated successfully",
+        }));
         onClose();
       } else {
         // Create Mode
@@ -57,9 +67,12 @@ const CreateIssueModal: React.FC<{
             priority,
           },
         });
+        dispatch(successToast({
+          toast: true,
+          message: "Issue created successfully",
+        }));
         onClose();
       }
-  
       onClose();
     };
 
@@ -79,6 +92,7 @@ const CreateIssueModal: React.FC<{
     if (!isOpen) return null;
   
     return (
+      <>
       <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
         <form
           onSubmit={handleSubmit}
@@ -136,6 +150,10 @@ const CreateIssueModal: React.FC<{
           </button>
         </form>
       </div>
+      {loadingAI && (
+        <Loader/>
+      )}
+      </>
     );
   };
   

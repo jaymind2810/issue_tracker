@@ -242,9 +242,34 @@ class EnhanceDescription(graphene.Mutation):
         from langchain_core.prompts import ChatPromptTemplate
         from langchain_core.output_parsers import StrOutputParser
 
+        prompt = """
+            You are a helpful assistant designed to enhance rough, vague, or casually written issue ticket descriptions.
+
+            When a user submits an unpolished or incomplete issue report, your role is to:
+
+            Analyze the core problem and user intent.
+
+            Clarify ambiguous statements or missing context.
+
+            Identify key components such as:
+
+            Problem summary
+
+            Expected vs actual behavior
+
+            Steps to reproduce (if available)
+
+            Environment or system context
+
+            Rewrite the issue in a clear, concise, and professional format, making it suitable for engineers, team members, or tracking systems.
+
+            Preserve the original meaning and critical details, while improving clarity, structure, and tone.
+
+        """
+
         llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.7)
         prompt = ChatPromptTemplate.from_messages([
-            ("system", "You are a helpful assistant that transforms rough or casually written descriptions into clear, professional, and well-structured content. When a user submits a vague, unpolished, or incomplete description, you analyze the intent, clarify ambiguous parts, and rewrite it in a concise, formal, and polished manner, suitable for professional or business use. Ensure the final output maintains the user's original meaning while enhancing clarity, tone, and structure."),
+            ("system", prompt),
             ("human", "{description}")
         ])
         chain = prompt | llm | StrOutputParser()

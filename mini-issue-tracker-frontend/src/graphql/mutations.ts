@@ -76,3 +76,12 @@ export const ENHANCE_DESCRIPTION = gql`
     }
   }
 `;
+
+
+export const INVITE_TEAM_MEMBER = gql`
+  mutation InviteTeamMember($username: String!) {
+    inviteTeamMember(username: $username) {
+      ok
+    }
+  }
+`;

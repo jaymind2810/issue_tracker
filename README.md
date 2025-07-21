@@ -2,6 +2,7 @@
 
 A full-stack issue tracking system with **Django + GraphQL** backend and **React + Apollo Client** frontend. Includes:
 
+- 👥 Register/login user
 - 🔐 JWT Authentication
 - 📋 Create / Edit / Delete Issues
 - 📡 Real-time Updates via GraphQL Subscriptions
@@ -24,7 +25,7 @@ A full-stack issue tracking system with **Django + GraphQL** backend and **React
 - React + TypeScript
 - Apollo Client
 - Tailwind CSS
-- Zustand / Redux (optional)
+- Redux
 - react-beautiful-dnd (Kanban drag & drop)
 
 ---
@@ -93,7 +94,7 @@ python manage.py migrate
 python manage.py createsuperuser
 ```
 
-- runserver
+- start local server
 
 ```
 python manage.py runserver
@@ -114,5 +115,12 @@ npm install
 ```bash
 VITE_GRAPHQL_API="http://localhost:8000/graphql"
 VITE_GRAPHQL_WS="ws://localhost:8000/graphql"
+
+```
+
+- start local server
+
+```
+npm run dev
 
 ```

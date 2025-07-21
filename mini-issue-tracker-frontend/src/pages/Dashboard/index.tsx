@@ -12,10 +12,15 @@ import { errorToast, successToast } from "../../store/toast/actions-creation";
 import { useAuth } from "../../context/AuthContext";
 import { GripVertical, Edit, Trash2, User2 } from "lucide-react";
 import RealTimeIssueListener from "../../components/WebSocket";
+import InviteTeamModal from "../../components/InviteTeamModal";
+import { useDispatch } from "react-redux";
+import ViewIssueModal from "../../components/ViewIssueModal";
 
 const Dashboard = () => {
 
   const { user: currentUser, logout } = useAuth();
+
+  const dispatch = useDispatch()
 
   const { data, loading, error, refetch } = useQuery(GET_ISSUES);
   const [deleteIssue] = useMutation(DELETE_ISSUE, {
@@ -34,6 +39,10 @@ const Dashboard = () => {
   const [showCreateModal, setShowCreateModal] = React.useState(false);
   const [editingIssue, setEditingIssue] = React.useState<Issue | null>(null);
   const [showKanban, setShowKanban] = React.useState(false); // 🔁 Toggle for Kanban
+  const [showInviteModal, setShowInviteModal] = React.useState(false);
+
+  const [viewingIssue, setViewingIssue] = React.useState<Issue | null>(null);
+  const [showViewModal, setShowViewModal] = React.useState(false);
 
   const filteredIssues = React.useMemo(() => {
     if (filter === "ALL") return data?.allIssues || [];
@@ -44,21 +53,21 @@ const Dashboard = () => {
     try {
       const { data } = await deleteIssue({ variables: { id } });
       if (data?.deleteIssue?.ok) {
-        successToast({
+        dispatch(successToast({
           toast: true,
           message: "Issue deleted successfully",
-        });
+        }));
       } else {
-        errorToast({
+        dispatch(errorToast({
           toast: true,
           message: "Failed to delete issue",
-        });
+        }));
       }
     } catch (err) {
-      errorToast({
+      dispatch(errorToast({
         toast: true,
         message: "Something went wrong",
-      });
+      }));
     }
   };
 
@@ -76,6 +85,12 @@ const Dashboard = () => {
             <ul className="space-y-4">
               <li className="hover:text-blue-200 cursor-pointer">Dashboard</li>
               <li className="hover:text-blue-200 cursor-pointer">Team</li>
+              <li 
+                className="hover:text-blue-200 cursor-pointer"
+                onClick={() => setShowInviteModal(true)}
+              >
+                Invite Team Member
+              </li>
               <li 
                 className="hover:text-red-200 text-red-500 font-semibold cursor-pointer"
                 onClick={() => logout()}
@@ -137,6 +152,7 @@ const Dashboard = () => {
             <KanbanBoard
               issues={data?.allIssues || []}
               onEdit={(i) => {
+                console.log(i, "0--------Edit Button Clicked000000000")
                 setEditingIssue(i);
                 setShowCreateModal(true);
               }}
@@ -153,6 +169,10 @@ const Dashboard = () => {
                     setShowCreateModal(true);
                   }}
                   onDelete={handleDelete}
+                  onClick={() => {
+                    setViewingIssue(issue);
+                    setShowViewModal(true);
+                  }}
                 />
               ))}
             </div>
@@ -164,6 +184,15 @@ const Dashboard = () => {
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         initialData={editingIssue}
+      />
+
+      <ViewIssueModal
+        isOpen={showViewModal}
+        onClose={() => {
+          setViewingIssue(null);
+          setShowViewModal(false);
+        }}
+        issue={viewingIssue}
       />
 
       <RealTimeIssueListener
@@ -178,6 +207,11 @@ const Dashboard = () => {
             return newIssues
           });
         }}
+      />
+
+      <InviteTeamModal
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
       />
     </>
   );

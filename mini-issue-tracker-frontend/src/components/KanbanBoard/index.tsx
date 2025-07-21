@@ -5,7 +5,7 @@ import { Issue } from "../../types";
 import { useMutation } from "@apollo/client";
 import { UPDATE_ISSUE, UPDATE_ISSUE_STATUS } from "../../graphql/mutations";
 import { GET_ISSUES } from "../../graphql/queries";
-import { errorToast } from "../../store/toast/actions-creation";
+import { errorToast, successToast } from "../../store/toast/actions-creation";
 import { DndContext, closestCenter } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -14,6 +14,7 @@ import {
 } from "@dnd-kit/sortable";
 import KanbanColumn from "./KanbanColumn";
 import { useAuth } from "../../context/AuthContext";
+import { useDispatch } from "react-redux";
 
 const STATUSES: ("OPEN" | "IN_PROGRESS" | "CLOSED")[] = [
   "OPEN",
@@ -30,6 +31,8 @@ interface KanbanBoardProps {
 const KanbanBoard: React.FC<KanbanBoardProps> = ({ issues: propIssues, onEdit, onDelete }) => {
 
   const { user: currentUser } = useAuth();
+
+  const dispatch = useDispatch()
 
   const [localIssues, setLocalIssues] = useState<Issue[]>([]);
 
@@ -71,8 +74,15 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ issues: propIssues, onEdit, o
           status: newStatus,
         },
       });
+      dispatch(successToast({
+        toast: true,
+        message: "Updated issue status."
+      }));
     } catch (err) {
-      errorToast({ toast: true, message: "Failed to update issue status" });
+      dispatch(errorToast({
+        toast: true,
+        message: "Failed to update issue status"
+      }));
       // Optional: rollback local state if needed
     }
   };
