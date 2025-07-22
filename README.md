@@ -122,7 +122,7 @@ npm install
 
 ```bash
 VITE_GRAPHQL_API="http://localhost:8000/graphql"
-VITE_GRAPHQL_WS="ws://localhost:8000/graphql"
+VITE_GRAPHQL_WS="ws://localhost:8000/graphql/"
 
 ```
 
