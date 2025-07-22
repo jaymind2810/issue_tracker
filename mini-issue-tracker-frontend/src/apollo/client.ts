@@ -23,7 +23,7 @@ const authLink = setContext((_, { headers }) => {
 // WebSocket link for subscriptions
 const wsLink = new GraphQLWsLink(
   createClient({
-    url: 'ws://127.0.0.1:8000/graphql/',
+    url: import.meta.env.VITE_GRAPHQL_WS,
     connectionParams: () => {
       const token = localStorage.getItem('token');
       return {
